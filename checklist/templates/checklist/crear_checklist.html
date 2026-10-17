@@ -1,0 +1,40 @@
+{% extends "checklist/base.html" %}
+
+{% block title %}Crear checklist | Bug Hunter{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <a class="back" href="{% url 'checklist:lista' %}">← Volver a checklists</a>
+    <section class="create-panel">
+        <p class="eyebrow">Nuevo checklist</p>
+        <h1>Crear checklist</h1>
+        <p class="intro">Define un nombre y selecciona el tipo para comenzar.</p>
+
+        <form method="post" class="create-form">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+                {{ form.nombre }}
+                {% if form.nombre.errors %}<ul class="errors">{% for error in form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+                {{ form.categoria }}
+                {% if form.categoria.errors %}<ul class="errors">{% for error in form.categoria.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <div id="custom-type-container" class="custom-type-container" hidden>
+                <label for="{{ form.tipo_personalizado.id_for_label }}">{{ form.tipo_personalizado.label }}</label>
+                {{ form.tipo_personalizado }}
+                {% if form.tipo_personalizado.errors %}<ul class="errors">{% for error in form.tipo_personalizado.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Continuar</button>
+            </div>
+        </form>
+    </section>
+    <script src="{% static 'js/crear_checklist.js' %}"></script>
+{% endblock %}
