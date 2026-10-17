@@ -1,0 +1,31 @@
+{% extends "checklist/base.html" %}
+
+{% block content %}
+    <p class="eyebrow">Aseguramiento de calidad</p>
+    <div class="page-heading">
+        <div>
+            <h1>Checklists</h1>
+        </div>
+        <a class="button" href="{% url 'checklist:crear' %}">Crear nuevo checklist</a>
+    </div>
+
+    <section class="card list-card">
+        <h2>Checklists creados</h2>
+        {% if checklists %}
+            <div class="list">
+                {% for checklist in checklists %}
+                    <div class="checklist-link">
+                        <span><strong>{{ checklist.nombre }}</strong></span>
+                        <div class="checklist-actions">
+                            <span class="badge">{{ checklist.tipo_display }}</span>
+                            <a class="button secondary" href="{% url 'checklist:editar' checklist.pk %}">Editar</a>
+                            <a class="button" href="{% url 'checklist:evaluar' checklist.pk %}">Iniciar checklist</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">Todavía no hay checklists.<br>Selecciona “Crear nuevo checklist” para comenzar.</div>
+        {% endif %}
+    </section>
+{% endblock %}

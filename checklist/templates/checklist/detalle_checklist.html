@@ -1,0 +1,66 @@
+{% extends "checklist/base.html" %}
+
+{% block title %}{{ checklist.nombre }} | Bug Hunter{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <a class="back" href="{% url 'checklist:lista' %}">← Volver a checklists</a>
+    <p class="eyebrow">{{ checklist.tipo_display }}</p>
+    <h1>{{ checklist.nombre }}</h1>
+    <p class="intro">Agrega los criterios a evaluar y guarda el checklist cuando termines.</p>
+
+    <form id="detail-checklist-form" method="post" class="card checklist-table-card">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+            <ul class="errors">{% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+        <div class="table-wrap">
+            <table class="criteria-table">
+                <thead>
+                    <tr>
+                        <th>Número de la fila</th>
+                        <th>Criterio a evaluar</th>
+                        <th>Cumplimiento</th>
+                        <th>Observaciones</th>
+                    </tr>
+                </thead>
+                <tbody id="criteria-rows">
+                    {% for form in formset %}
+                        <tr>
+                            <td class="row-number">{{ forloop.counter }}</td>
+                            <td>
+                                {{ form.descripcion }}
+                                {% if form.descripcion.errors %}<ul class="errors">{% for error in form.descripcion.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                            </td>
+                            <td>
+                                {{ form.estado }}
+                                {% if form.estado.errors %}<ul class="errors">{% for error in form.estado.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                            </td>
+                            <td>
+                                {{ form.observaciones }}
+                                {% if form.observaciones.errors %}<ul class="errors">{% for error in form.observaciones.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-actions">
+            <button class="button secondary" id="add-row" type="button">Agregar fila</button>
+            <button type="submit">Guardar</button>
+        </div>
+    </form>
+
+    <template id="empty-row-template">
+        <tr>
+            <td class="row-number"></td>
+            <td>{{ formset.empty_form.descripcion }}</td>
+            <td>{{ formset.empty_form.estado }}</td>
+            <td>{{ formset.empty_form.observaciones }}</td>
+        </tr>
+    </template>
+    <script src="{% static 'js/detalle_checklist.js' %}"></script>
+{% endblock %}
