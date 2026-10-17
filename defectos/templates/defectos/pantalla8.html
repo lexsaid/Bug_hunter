@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Bitácora de Defectos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 30px 40px;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: #1e5a22;
+            font-size: 26px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .btn-crear {
+            padding: 8px 18px;
+            border: 1px solid #7c4dff;
+            border-radius: 8px;
+            color: #7c4dff;
+            background-color: transparent;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-crear:hover {
+            background-color: #7c4dff;
+            color: #ffffff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        th {
+            background-color: #156d35;
+            color: #ffffff;
+            padding: 12px 8px;
+            font-size: 13px;
+            font-weight: normal;
+            text-align: center;
+        }
+
+        tbody tr.abierto td {
+            background-color: #f7b2b2;
+            text-align: center;
+            padding: 12px 8px;
+            font-size: 13px;
+        }
+
+        tbody tr.resuelto td {
+            background-color: #bbf0cf;
+            text-align: center;
+            padding: 12px 8px;
+            font-size: 13px;
+        }
+
+        .btn-actualizar {
+            background-color: #ffffff;
+            border: 1px solid #888888;
+            padding: 4px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #000000;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-actualizar:hover {
+            background-color: #eeeeee;
+        }
+
+        .empty-row {
+            text-align: center;
+            padding: 25px;
+            color: #666666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-section">
+        <h1>Bitacora de defectos</h1>
+        <a href="{% url 'defectos:crear' %}" class="btn-crear">+ Registrar Defecto</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">ID</th>
+                <th style="width: 25%;">Descripción</th>
+                <th style="width: 15%;">Tipo de defecto</th>
+                <th style="width: 15%;">Proyecto Afectado</th>
+                <th style="width: 15%;">Tecnica SQA</th>
+                <th style="width: 10%;">Severidad</th>
+                <th style="width: 10%;">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in defectos %}
+            <tr class="{% if d.estado == 'Abierto' %}abierto{% else %}resuelto{% endif %}">
+                <td>{{ d.codigo }}</td>
+                <td>{{ d.descripcion }}</td>
+                <td>{{ d.tipo_defecto }}</td>
+                <td>{{ d.proyecto_afectado }}</td>
+                <td>{{ d.tecnica_sqa }}</td>
+                <td>{{ d.severidad }}</td>
+                <td>
+                    {% if d.estado == 'Abierto' %}
+                        <a href="{% url 'defectos:resolver' d.id %}" class="btn-actualizar">Actualizar</a>
+                    {% else %}
+                        <span>Resuelto</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="empty-row">Aún no hay defectos registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
