@@ -1,0 +1,91 @@
+{% extends "checklist/base.html" %}
+
+{% load static %}
+
+{% block title %}Editar {{ checklist.nombre }} | Bug Hunter{% endblock %}
+
+{% block content %}
+    <a class="back" href="{% url 'checklist:lista' %}">← Volver a checklists</a>
+    <p class="eyebrow">CU-09 · Edición de la estructura</p>
+    <h1>Editar checklist</h1>
+    <p class="intro">Modifica el nombre, tipo, criterios, cumplimiento y observaciones.</p>
+
+    <form id="edit-checklist-form" method="post" class="card checklist-table-card">
+        {% csrf_token %}
+        <h2>Datos del checklist</h2>
+        <label for="{{ form.nombre.id_for_label }}">{{ form.nombre.label }}</label>
+        {{ form.nombre }}
+        {% if form.nombre.errors %}<ul class="errors">{% for error in form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+        {{ form.categoria }}
+        {% if form.categoria.errors %}<ul class="errors">{% for error in form.categoria.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        <div id="custom-type-container" class="custom-type-container" hidden>
+            <label for="{{ form.tipo_personalizado.id_for_label }}">{{ form.tipo_personalizado.label }}</label>
+            {{ form.tipo_personalizado }}
+            {% if form.tipo_personalizado.errors %}<ul class="errors">{% for error in form.tipo_personalizado.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+        </div>
+        {% if form.non_field_errors %}<ul class="errors">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+
+        <h2 style="margin-top: 32px;">Criterios</h2>
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+            <ul class="errors">{% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        {% endif %}
+        <div class="table-wrap">
+            <table class="criteria-table">
+                <thead>
+                    <tr>
+                        <th>Número de la fila</th>
+                        <th>Criterio a evaluar</th>
+                        <th>Cumplimiento</th>
+                        <th>Observaciones iniciales</th>
+                    </tr>
+                </thead>
+                <tbody id="edit-criteria-rows">
+                    {% for item in formset %}
+                        <tr>
+                            <td class="row-number">{{ forloop.counter }}</td>
+                            <td>
+                                {{ item.id }}
+                                {{ item.descripcion }}
+                                {% if item.descripcion.errors %}<ul class="errors">{% for error in item.descripcion.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                                {% if item.DELETE %}
+                                    <label class="delete-field">{{ item.DELETE }} Eliminar fila</label>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ item.estado }}
+                                {% if item.estado.errors %}<ul class="errors">{% for error in item.estado.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                            </td>
+                            <td>
+                                {{ item.observaciones }}
+                                {% if item.observaciones.errors %}<ul class="errors">{% for error in item.observaciones.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if formset.empty_form %}
+            <template id="edit-empty-row-template">
+                <tr>
+                    <td class="row-number"></td>
+                    <td>
+                        {{ formset.empty_form.id }}
+                        {{ formset.empty_form.descripcion }}
+                        <label class="delete-field">{{ formset.empty_form.DELETE }} Eliminar fila</label>
+                    </td>
+                    <td>{{ formset.empty_form.estado }}</td>
+                    <td>{{ formset.empty_form.observaciones }}</td>
+                </tr>
+            </template>
+        {% endif %}
+
+        <div class="table-actions">
+            <button class="button secondary" id="edit-add-row" type="button">Agregar fila</button>
+            <button type="submit">Guardar cambios</button>
+        </div>
+    </form>
+
+    <script src="{% static 'js/editar_checklist.js' %}"></script>
+{% endblock %}
