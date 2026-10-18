@@ -57,7 +57,7 @@ ROOT_URLCONF = 'Bug_hunter.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'Bug_hunter' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
