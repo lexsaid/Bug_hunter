@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <title>Nuevo Defecto</title>
     <style>
+
+        .bh-topbar {
+            background-color: #102a43;
+            padding: 18px max(24px, calc((100vw - 1120px) / 2));
+            margin: -30px -40px 30px;
+        }
+
+        .bh-brand {
+            color: #ffffff;
+            font-family: "Segoe UI", Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 750;
+            letter-spacing: 0.02em;
+            text-decoration: none;
+        }
+
+        .bh-brand span {
+            color: #54d6a0;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #ffffff;
@@ -71,7 +91,15 @@
         }
     </style>
 </head>
+
 <body>
+
+    <header class="bh-topbar">
+        <h1 class="bh-brand">BUG HUNTER</h1>
+    </header>
+
+    <a href="{% url 'defectos:lista' %}" style="text-decoration: none; color: #156d35; font-size: 14px;">&larr; Volver a la página de defectos</a>
+
     <h1>Bitacora de defectos</h1>
 
     <form method="POST">
