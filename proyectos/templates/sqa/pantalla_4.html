@@ -1,26 +1,26 @@
 {% extends 'checklist/base.html' %}
 
 {% block content %}
-    <a class="back" href="{% url 'proyectos:lista_proyectos' %}">← Volver a proyectos</a>
-    <section class="card">
-        <p class="eyebrow">Proyecto SQA</p>
-        <h1>{{ project.name }}</h1>
-        <p class="intro">
-            Periodo: {{ project.start_date }} – {{ project.end_date }}
-            · Tu rol: <strong>{{ user_role }}</strong>
-        </p>
+    <h1 class="visually-hidden">{{ project.name }} — {{ user_role }}</h1>
+    
+        <a class="project-dashboard-link" href="{% url 'matriz_trazabilidad:proyecto_lista' project.id %}">
+            <span>Matriz Trazabilidad</span>
+        </a>
+        <a class="project-dashboard-link" href="{% url 'checklist:proyecto_lista' project.id %}">
+            Checklist
+        </a>
+        <a class="project-dashboard-link" href="{% url 'defectos:proyecto_lista' project.id %}">
+            <span>Bitacora de defectos</span>
+        </a>
+        <a class="project-dashboard-link" href="{% url 'proyectos:health_report' project.id %}">
+            <span>Generar reporte de salud</span>
+        </a>
 
-        <div class="project-actions">
-            <a class="button secondary" href="{% url 'checklist:proyecto_lista' project.id %}">Checklist</a>
-            <a class="button secondary" href="{% url 'defectos:proyecto_lista' project.id %}">Bitácora de defectos</a>
-            <a class="button secondary" href="{% url 'matriz_trazabilidad:proyecto_lista' project.id %}">Matriz de trazabilidad</a>
-            <a class="button secondary" href="{% url 'proyectos:health_report' project.id %}">Generar reporte de salud</a>
-        </div>
-    </section>
 
     {% if can_invite %}
-        <section class="card" style="margin-top: 20px;">
-            <h2>Invitar Desarrollador</h2>
+        <section class="card project-team-card">
+            <h2>Agregar gente al proyecto</h2>
+            <p class="intro">Proyecto: {{ project.name }} · Tu rol: <strong>{{ user_role }}</strong></p>
             <form method="post">
                 {% csrf_token %}
                 {{ invite_form.as_p }}
@@ -40,5 +40,7 @@
                 {% endfor %}
             </ul>
         </section>
+    {% else %}
+        <p class="project-role-note">Proyecto: {{ project.name }} · Tu rol: <strong>{{ user_role }}</strong></p>
     {% endif %}
 {% endblock %}

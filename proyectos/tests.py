@@ -118,11 +118,23 @@ class ProjectFlowTests(TestCase):
     def test_project_owner_can_invite_any_existing_user_as_developer(self):
         self.client.force_login(self.qa)
 
+        dashboard_url = reverse(
+            "proyectos:detalle_proyecto",
+            kwargs={"project_id": self.project.pk},
+        )
+        dashboard = self.client.get(dashboard_url)
+        self.assertContains(dashboard, "Agregar gente al proyecto")
+        link_order = [
+            "Matriz Trazabilidad",
+            "Checklist",
+            "Bitacora de defectos",
+            "Generar reporte de salud",
+        ]
+        link_positions = [dashboard.content.index(label.encode()) for label in link_order]
+        self.assertEqual(link_positions, sorted(link_positions))
+
         response = self.client.post(
-            reverse(
-                "proyectos:detalle_proyecto",
-                kwargs={"project_id": self.project.pk},
-            ),
+            dashboard_url,
             {"user": self.developer.pk},
         )
 
