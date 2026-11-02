@@ -2,6 +2,11 @@ from django import forms
 from .models import Defecto
 
 class DefectoForm(forms.ModelForm):
+    def __init__(self, *args, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if project is not None:
+            self.fields.pop("proyecto_afectado")
+
     class Meta:
         model = Defecto
         fields = ['descripcion', 'tipo_defecto', 'proyecto_afectado', 'tecnica_sqa', 'severidad']

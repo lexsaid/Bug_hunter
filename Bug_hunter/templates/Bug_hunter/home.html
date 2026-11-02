@@ -1,16 +1,30 @@
-<!DOCTYPE html> 
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bug Hunter</title>
-</head>
-<body>
-    <h1>Bug Hunter</h1>
+{% extends "checklist/base.html" %}
 
-    <h1>Lista de Checklist</h1>
-    <a href="{% url 'checklist:lista' %}">Ir a la lista de checklist</a>
-    <h1>Lista de Defectos</h1>
-    <a href="{% url 'defectos:lista' %}">Ir a la lista de defectos</a>
-</body>
-</html>
+{% block title %}Inicio | Bug Hunter{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Bug Hunter</h1>
+        <p>Descubre y reporta bugs en tus aplicaciones favoritas.</p>
+    </section>
+
+    <section class="features">
+        <h2>Características</h2>
+        <ul>
+            <li>Reporta bugs fácilmente</li>
+            <li>Colabora con otros usuarios</li>
+            <li>Seguimiento de problemas</li>
+        </ul>
+    </section>
+
+    <section class="seccion-proyectos">
+        <nav class="proyectos">
+            <h2>Proyectos</h2>
+            <ul>
+                <li><a href="{% url 'checklist:lista' %}">Lista de Checklists</a></li>
+                <li><a href="{% url 'defectos:lista' %}">Lista de Defectos</a></li>
+            </ul>
+        </nav>
+    </section>
+
+{% endblock %}

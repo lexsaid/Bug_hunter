@@ -1,0 +1,44 @@
+{% extends 'checklist/base.html' %}
+
+{% block content %}
+    <a class="back" href="{% url 'proyectos:lista_proyectos' %}">← Volver a proyectos</a>
+    <section class="card">
+        <p class="eyebrow">Proyecto SQA</p>
+        <h1>{{ project.name }}</h1>
+        <p class="intro">
+            Periodo: {{ project.start_date }} – {{ project.end_date }}
+            · Tu rol: <strong>{{ user_role }}</strong>
+        </p>
+
+        <div class="project-actions">
+            <a class="button secondary" href="{% url 'checklist:proyecto_lista' project.id %}">Checklist</a>
+            <a class="button secondary" href="{% url 'defectos:proyecto_lista' project.id %}">Bitácora de defectos</a>
+            <a class="button secondary" href="{% url 'matriz_trazabilidad:proyecto_lista' project.id %}">Matriz de trazabilidad</a>
+            <a class="button secondary" href="{% url 'proyectos:health_report' project.id %}">Generar reporte de salud</a>
+        </div>
+    </section>
+
+    {% if can_invite %}
+        <section class="card" style="margin-top: 20px;">
+            <h2>Invitar Desarrollador</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ invite_form.as_p }}
+                {% if invite_form.errors %}
+                    <p class="errors">Revisa la cuenta seleccionada.</p>
+                {% endif %}
+                <button type="submit">Agregar al proyecto</button>
+            </form>
+
+            <h2 style="margin-top: 24px;">Equipo del proyecto</h2>
+            <ul>
+                <li>{{ project.created_by.username }} — Técnico QA (creador)</li>
+                {% for membership in members %}
+                    <li>{{ membership.user.username }} — Desarrollador</li>
+                {% empty %}
+                    <li class="muted">Todavía no hay desarrolladores invitados.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+{% endblock %}

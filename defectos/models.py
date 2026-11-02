@@ -1,4 +1,7 @@
+#seccion defectos
+
 from django.db import models
+
 
 class Defecto(models.Model):
     SEVERIDAD_CHOICES = [
@@ -20,6 +23,13 @@ class Defecto(models.Model):
     severidad = models.CharField(max_length=10, choices=SEVERIDAD_CHOICES, default='Menor')
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default='Abierto')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    project = models.ForeignKey(
+        "proyectos.Project",
+        on_delete=models.CASCADE,
+        related_name="sqa_defects",
+        null=True,
+        blank=True,
+    )
 
     def save(self, *args, **kwargs):
         if not self.codigo:

@@ -5,7 +5,11 @@
 {% load static %}
 
 {% block content %}
-    <a class="back" href="{% url 'checklist:lista' %}">← Volver a checklists</a>
+    {% if project %}
+        <a class="back" href="{% url 'checklist:proyecto_lista' project.id %}">← Volver a checklists</a>
+    {% else %}
+        <a class="back" href="{% url 'checklist:lista' %}">← Volver a checklists</a>
+    {% endif %}
     <section class="create-panel">
         <p class="eyebrow">Nuevo checklist</p>
         <h1>Crear checklist</h1>

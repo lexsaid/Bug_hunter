@@ -117,16 +117,20 @@
 
 <body>
 
-    <header class="bh-topbar">
-        <h1 class="bh-brand">BUG HUNTER</h1>
-    </header>
-
-    <a href="{% url 'home' %}" style="text-decoration: none; color: #156d35; font-size: 14px;">&larr; Volver a la página de inicio</a>
+    {% if project %}
+        <a href="{% url 'proyectos:detalle_proyecto' project.id %}" style="text-decoration: none; color: #156d35; font-size: 14px;">&larr; Volver a {{ project.name }}</a>
+    {% else %}
+        <a href="{% url 'proyectos:lista_proyectos' %}" style="text-decoration: none; color: #156d35; font-size: 14px;">&larr; Volver a proyectos</a>
+    {% endif %}
 
 
     <div class="header-section">
         <h1>Bitacora de defectos</h1>
-        <a href="{% url 'defectos:crear' %}" class="btn-crear">+ Registrar Defecto</a>
+        {% if project %}
+            <a href="{% url 'defectos:proyecto_crear' project.id %}" class="btn-crear">+ Registrar Defecto</a>
+        {% else %}
+            <a href="{% url 'defectos:crear' %}" class="btn-crear">+ Registrar Defecto</a>
+        {% endif %}
     </div>
 
     <table>
@@ -152,7 +156,11 @@
                 <td>{{ d.severidad }}</td>
                 <td>
                     {% if d.estado == 'Abierto' %}
-                        <a href="{% url 'defectos:resolver' d.id %}" class="btn-actualizar">Actualizar</a>
+                        {% if project %}
+                            <a href="{% url 'defectos:proyecto_resolver' project.id d.id %}" class="btn-actualizar">Actualizar</a>
+                        {% else %}
+                            <a href="{% url 'defectos:resolver' d.id %}" class="btn-actualizar">Actualizar</a>
+                        {% endif %}
                     {% else %}
                         <span>Resuelto</span>
                     {% endif %}

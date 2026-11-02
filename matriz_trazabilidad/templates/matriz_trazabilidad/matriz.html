@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matriz de Trazabilidad - Bug Hunter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 36px 48px;
+            color: #1f2937;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+        .titulo-pagina {
+            color: #136f2d;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+        .acciones-superiores {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .btn-outline {
+            background-color: #ffffff;
+            color: #4f46e5;
+            border: 1.5px solid #818cf8;
+            padding: 7px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 3px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+        .btn-outline:hover {
+            background-color: #eef2ff;
+        }
+        .resumen-salud {
+            font-size: 13px;
+            color: #374151;
+            margin-bottom: 14px;
+            display: flex;
+            gap: 20px;
+        }
+        .tabla-contenedor {
+            width: 100%;
+            overflow-x: auto;
+        }
+        table.tabla-matriz {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        table.tabla-matriz thead th {
+            background-color: #0e6b29;
+            color: #ffffff;
+            font-weight: 600;
+            text-align: center;
+            padding: 10px 8px;
+            border-right: 2px solid #ffffff;
+        }
+        table.tabla-matriz tbody tr.fila-parcial {
+            background-color: #e6a5a5;
+            border-bottom: 6px solid #ffffff;
+        }
+        table.tabla-matriz tbody tr.fila-completa {
+            background-color: #b4e3be;
+            border-bottom: 6px solid #ffffff;
+        }
+        table.tabla-matriz tbody td {
+            padding: 9px 8px;
+            text-align: center;
+            vertical-align: middle;
+            color: #111827;
+        }
+        .celda-flex {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .btn-celda {
+            background-color: rgba(255, 255, 255, 0.78);
+            color: #1f2937;
+            border: 1px solid #6b7280;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 2px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .btn-celda:hover {
+            background-color: #ffffff;
+            border-color: #111827;
+        }
+        .btn-ramificar {
+            background-color: transparent;
+            color: #136f2d;
+            border: 1px solid #136f2d;
+            padding: 1px 5px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 2px;
+            text-decoration: none;
+        }
+        .btn-ramificar:hover {
+            background-color: #136f2d;
+            color: #ffffff;
+        }
+        .link-evidencia {
+            color: #0f5132;
+            font-weight: 600;
+            text-decoration: underline;
+            max-width: 140px;
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .badge-estado {
+            font-weight: 700;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.25);
+        }
+        .vacio-msg {
+            margin-top: 24px;
+            padding: 20px;
+            border: 1px dashed #9ca3af;
+            text-align: center;
+            color: #4b5563;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <h1 class="titulo-pagina">
+            Matriz de trazabilidad{% if project %} — {{ project.name }}{% endif %}
+        </h1>
+        <div class="acciones-superiores">
+            {% if project %}
+            <a href="{% url 'matriz_trazabilidad:proyecto_registrar_rn' project.id %}" class="btn-outline">
+            {% else %}
+            <a href="{% url 'matriz_trazabilidad:registrar_rn' %}" class="btn-outline">
+            {% endif %}
+                + Agregar Requerimiento de Negocio (RN)
+            </a>
+            {% if project %}
+                <a href="{% url 'proyectos:detalle_proyecto' project.id %}" class="btn-outline">Volver al proyecto</a>
+            {% else %}
+                <a href="{% url 'proyectos:lista_proyectos' %}" class="btn-outline">Volver a proyectos</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="resumen-salud">
+        <span><strong>Total de filas:</strong> {{ total }}</span>
+        <span><strong>Trazabilidad Completa:</strong> {{ completas }} ({{ porcentaje_completitud }}%)</span>
+        <span><strong>Trazabilidad Parcial:</strong> {{ parciales }}</span>
+    </div>
+
+    <div class="tabla-contenedor">
+        <table class="tabla-matriz">
+            <thead>
+                <tr>
+                    <th>ID-RN</th>
+                    <th>ID-CU</th>
+                    <th>Nombre</th>
+                    <th>ID-RF</th>
+                    <th>ID-RNF</th>
+                    <th>ID-Módulo</th>
+                    <th>ID-Pantalla de vista</th>
+                    <th>ID-Caso de prueba</th>
+                    <th>Evidencia</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reg in registros %}
+                <tr class="{% if reg.estado == 'Completa' %}fila-completa{% else %}fila-parcial{% endif %}">
+                    <!-- Columna 1: ID-RN (Permite agregar múltiples CU - 1:N) -->
+                    <td>
+                        <div class="celda-flex">
+                            <strong>{{ reg.id_rn }}</strong>
+                            {% if reg.id_cu %}
+                                {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_cu' project.id reg.pk %}" class="btn-ramificar" title="Agregar otro Caso de Uso a {{ reg.id_rn }}">+CU</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_cu' reg.pk %}" class="btn-ramificar" title="Agregar otro Caso de Uso a {{ reg.id_rn }}">+CU</a>{% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+
+                    <!-- Columna 2: ID-CU (CU-04) -->
+                    <td>
+                        {% if reg.id_cu %}
+                            <div class="celda-flex">
+                                <span>{{ reg.id_cu }}</span>
+                                {% if reg.id_rf %}
+                                    {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_rf' project.id reg.pk %}" class="btn-ramificar" title="Agregar otro RF a {{ reg.id_cu }}">+RF</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_rf' reg.pk %}" class="btn-ramificar" title="Agregar otro RF a {{ reg.id_cu }}">+RF</a>{% endif %}
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_cu' project.id reg.pk %}" class="btn-celda">Agregar CU</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_cu' reg.pk %}" class="btn-celda">Agregar CU</a>{% endif %}
+                        {% endif %}
+                    </td>
+
+                    <!-- Columna 3: Nombre del CU -->
+                    <td>
+                        {{ reg.nombre_cu|default:"-" }}
+                    </td>
+
+                    <!-- Columna 4: ID-RF (CU-05) -->
+                    <td>
+                        {% if reg.id_rf %}
+                            <div class="celda-flex">
+                                <span>{{ reg.id_rf }}</span>
+                                {% if reg.id_rnf %}
+                                    {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_rnf' project.id reg.pk %}" class="btn-ramificar" title="Agregar otro RNF a {{ reg.id_rf }}">+RNF</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_rnf' reg.pk %}" class="btn-ramificar" title="Agregar otro RNF a {{ reg.id_rf }}">+RNF</a>{% endif %}
+                                {% endif %}
+                            </div>
+                        {% elif reg.id_cu %}
+                            {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_rf' project.id reg.pk %}" class="btn-celda">Agregar RF</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_rf' reg.pk %}" class="btn-celda">Agregar RF</a>{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Columna 5: ID-RNF (CU-06) -->
+                    <td>
+                        {% if reg.id_rnf %}
+                            <div class="celda-flex">
+                                <span>{{ reg.id_rnf }}</span>
+                                {% if reg.id_modulo %}
+                                    {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_vincular_modulo' project.id reg.pk %}" class="btn-ramificar" title="Vincular otro Módulo a {{ reg.id_rnf }}">+Mód</a>{% else %}<a href="{% url 'matriz_trazabilidad:vincular_modulo' reg.pk %}" class="btn-ramificar" title="Vincular otro Módulo a {{ reg.id_rnf }}">+Mód</a>{% endif %}
+                                {% endif %}
+                            </div>
+                        {% elif reg.id_rf %}
+                            {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_rnf' project.id reg.pk %}" class="btn-celda">Agregar RNF</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_rnf' reg.pk %}" class="btn-celda">Agregar RNF</a>{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Columna 6: ID-Módulo (CU-07) -->
+                    <td>
+                        {% if reg.id_modulo %}
+                            <span>{{ reg.id_modulo }}</span>
+                        {% elif reg.id_rnf %}
+                            {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_vincular_modulo' project.id reg.pk %}" class="btn-celda">Vincular Módulo</a>{% else %}<a href="{% url 'matriz_trazabilidad:vincular_modulo' reg.pk %}" class="btn-celda">Vincular Módulo</a>{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Columna 7: ID-Pantalla de vista (CU-08) -->
+                    <td>
+                        {% if reg.id_pantalla %}
+                            <div class="celda-flex">
+                                <span>{{ reg.id_pantalla }}</span>
+                                {% if reg.id_cp %}
+                                    {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_cp' project.id reg.pk %}" class="btn-ramificar" title="Agregar otro Caso de Prueba">+CP</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_cp' reg.pk %}" class="btn-ramificar" title="Agregar otro Caso de Prueba">+CP</a>{% endif %}
+                                {% endif %}
+                            </div>
+                        {% elif reg.id_modulo %}
+                            {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_vincular_pantalla' project.id reg.pk %}" class="btn-celda">Vincular Pantalla</a>{% else %}<a href="{% url 'matriz_trazabilidad:vincular_pantalla' reg.pk %}" class="btn-celda">Vincular Pantalla</a>{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Columna 8: ID-Caso de prueba (CU-09) -->
+                    <td>
+                        {% if reg.id_cp %}
+                            <span>{{ reg.id_cp }}</span>
+                        {% elif reg.id_pantalla %}
+                            {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_cp' project.id reg.pk %}" class="btn-celda">Vincular CP</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_cp' reg.pk %}" class="btn-celda">Vincular CP</a>{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Columna 9: Evidencia (CU-10) -->
+                    <td>
+                        {% if reg.evidencia %}
+                            <div class="celda-flex">
+                                <a href="{{ reg.evidencia }}" target="_blank" rel="noopener" class="link-evidencia" title="{{ reg.evidencia }}">
+                                    {{ reg.evidencia }}
+                                </a>
+                                {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_evidencia' project.id reg.pk %}" class="btn-ramificar" title="Editar Evidencia">✎</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_evidencia' reg.pk %}" class="btn-ramificar" title="Editar Evidencia">✎</a>{% endif %}
+                            </div>
+                        {% elif reg.id_cp %}
+                            {% if project %}<a href="{% url 'matriz_trazabilidad:proyecto_registrar_evidencia' project.id reg.pk %}" class="btn-celda">Agregar Evidencia</a>{% else %}<a href="{% url 'matriz_trazabilidad:registrar_evidencia' reg.pk %}" class="btn-celda">Agregar Evidencia</a>{% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <!-- Columna 10: Estado -->
+                    <td>
+                        <span class="badge-estado">{{ reg.estado }}</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10">
+                        <div class="vacio-msg">
+                            No hay requerimientos registrados todavía. Seleccione <strong>"+ Agregar Requerimiento de Negocio (RN)"</strong> para iniciar la Matriz de Trazabilidad.
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

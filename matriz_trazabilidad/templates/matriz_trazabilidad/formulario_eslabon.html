@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titulo_cu }} - Bug Hunter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body {
+            background-color: #ffffff;
+            margin: 0;
+            padding: 40px 48px;
+            color: #1f2937;
+        }
+        .contenedor-form {
+            max-width: 540px;
+            margin: 0 auto;
+            border: 1px solid #d1d5db;
+            padding: 28px 32px;
+            border-radius: 4px;
+        }
+        .titulo-form {
+            color: #136f2d;
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+        .contexto-padre {
+            background-color: #b4e3be;
+            color: #0f5132;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            border-radius: 3px;
+        }
+        .campo-grupo {
+            margin-bottom: 18px;
+        }
+        .campo-grupo label {
+            display: block;
+            background-color: #0e6b29;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 10px;
+            margin-bottom: 6px;
+        }
+        .input-matriz {
+            width: 100%;
+            padding: 9px 10px;
+            font-size: 14px;
+            border: 1.5px solid #9ca3af;
+            border-radius: 2px;
+        }
+        .input-matriz:focus {
+            outline: none;
+            border-color: #0e6b29;
+        }
+        .alerta-error {
+            background-color: #e6a5a5;
+            color: #7f1d1d;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 6px;
+            border-left: 4px solid #991b1b;
+        }
+        .botones-barra {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .btn-guardar {
+            background-color: #0e6b29;
+            color: #ffffff;
+            border: 1.5px solid #0e6b29;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-guardar:hover {
+            background-color: #0a521f;
+        }
+        .btn-cancelar {
+            background-color: #ffffff;
+            color: #4f46e5;
+            border: 1.5px solid #818cf8;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 3px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn-cancelar:hover {
+            background-color: #eef2ff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-form">
+        <h2 class="titulo-form">{{ titulo_cu }}</h2>
+
+        {% if contexto_padre %}
+            <div class="contexto-padre">{{ contexto_padre }}</div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="campo-grupo">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <div class="alerta-error">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="botones-barra">
+                <button type="button" class="btn-cancelar" onclick="confirmarCancelacion()">Cancelar</button>
+                <button type="submit" class="btn-guardar">{{ texto_boton }}</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function confirmarCancelacion() {
+            const confirmar = window.confirm(
+                "¿Está seguro de que desea cancelar? Se perderán los datos ingresados no guardados."
+            );
+            if (confirmar) {
+                window.location.href = "{% if project %}{% url 'matriz_trazabilidad:proyecto_lista' project.id %}{% else %}{% url 'matriz_trazabilidad:vista_matriz' %}{% endif %}";
+            }
+        }
+    </script>
+
+</body>
+</html>

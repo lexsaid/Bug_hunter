@@ -1,0 +1,33 @@
+{% extends "checklist/base.html" %}
+
+{% block title %}Iniciar sesión | Bug Hunter{% endblock %}
+
+{% block content %}
+    <section class="create-panel">
+        <p class="eyebrow">Acceso al sistema</p>
+        <h1>Iniciar sesión</h1>
+
+        <form method="post" class="create-form">
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            {% if error %}<p class="errors" role="alert">{{ error }}</p>{% endif %}
+            <div>
+                <label for="id_username">Nombre de usuario</label>
+                <input type="text" name="username" id="id_username" required placeholder="Escribe tu usuario">
+            </div>
+
+            <div>
+                <label for="id_password">Contraseña</label>
+                <input type="password" name="password" id="id_password" required placeholder="Escribe tu contraseña">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit">Entrar</button>
+            </div>
+
+            <div class="form-actions">
+                <a href="{% url 'registrar_usuario_normal' %}">¿No tienes cuenta? Regístrate</a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

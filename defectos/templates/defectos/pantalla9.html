@@ -98,7 +98,11 @@
         <h1 class="bh-brand">BUG HUNTER</h1>
     </header>
 
-    <a href="{% url 'defectos:lista' %}" style="text-decoration: none; color: #156d35; font-size: 14px;">&larr; Volver a la página de defectos</a>
+    {% if project %}
+        <a href="{% url 'defectos:proyecto_lista' project.id %}" style="text-decoration: none; color: #156d35; font-size: 14px;">&larr; Volver a la página de defectos</a>
+    {% else %}
+        <a href="{% url 'defectos:lista' %}" style="text-decoration: none; color: #156d35; font-size: 14px;">&larr; Volver a la página de defectos</a>
+    {% endif %}
 
     <h1>Bitacora de defectos</h1>
 
@@ -121,7 +125,11 @@
                     <td style="color: #888888; font-size: 13px;">(Automático)</td>
                     <td>{{ form.descripcion }}</td>
                     <td>{{ form.tipo_defecto }}</td>
-                    <td>{{ form.proyecto_afectado }}</td>
+                    {% if project %}
+                        <td>{{ project.name }}</td>
+                    {% else %}
+                        <td>{{ form.proyecto_afectado }}</td>
+                    {% endif %}
                     <td>{{ form.tecnica_sqa }}</td>
                     <td>{{ form.severidad }}</td>
                     <td style="color: #888888; font-size: 13px;">Abierto</td>

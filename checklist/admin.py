@@ -10,11 +10,12 @@ class CriterioInline(admin.TabularInline):
 
 @admin.register(Checklist)
 class ChecklistAdmin(admin.ModelAdmin):
-    list_display = ("nombre", "categoria", "creado_en")
-    inlines = [CriterioInline]
+    list_display = ("nombre", "categoria", "project", "creado_en")
+    list_filter = ("categoria",)
+    inlines = (CriterioInline,)
 
 
 @admin.register(Criterio)
 class CriterioAdmin(admin.ModelAdmin):
     list_display = ("descripcion", "checklist", "estado")
-    list_filter = ("estado", "checklist")
+    list_filter = ("estado",)
