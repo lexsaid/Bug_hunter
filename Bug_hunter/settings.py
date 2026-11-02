@@ -27,9 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,6 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'checklist',
+    'usuarios',
+    'proyectos',
 ]
 
 MIDDLEWARE = [
@@ -51,6 +51,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'Bug_hunter.urls'
+AUTH_USER_MODEL = 'usuarios.Usuario'
+
+# Indica a @login_required a dónde redirigir si el usuario no ha iniciado sesión
+LOGIN_URL = 'login'
+
+# (Opcional) A dónde enviar al usuario después de iniciar sesión correctamente
+LOGIN_REDIRECT_URL = 'proyectos:lista_proyectos'
 
 TEMPLATES = [
     {

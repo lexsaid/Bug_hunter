@@ -1,5 +1,6 @@
-from django.db import models
+#seccion checklist
 
+from django.db import models
 
 class Checklist(models.Model):
     CATEGORIAS = [
@@ -11,6 +12,13 @@ class Checklist(models.Model):
     nombre = models.CharField("nombre", max_length=120)
     categoria = models.CharField("categoría", max_length=20, choices=CATEGORIAS)
     tipo_personalizado = models.CharField("tipo personalizado", max_length=60, blank=True)
+    project = models.ForeignKey(
+        "proyectos.Project",
+        on_delete=models.CASCADE,
+        related_name="checklists",
+        null=True,
+        blank=True,
+    )
     creado_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:

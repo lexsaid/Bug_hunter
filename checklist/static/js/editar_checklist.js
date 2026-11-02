@@ -4,29 +4,49 @@
             const template = document.getElementById("edit-empty-row-template");
             const totalForms = document.getElementById("id_form-TOTAL_FORMS");
             const editForm = document.getElementById("edit-checklist-form");
+            const categorySelect = document.getElementById("id_categoria");
+            const customType = document.getElementById("custom-type-container");
+            const customInput = document.getElementById("id_tipo_personalizado");
 
-            addButton.addEventListener("click", () => {
-                const index = Number(totalForms.value);
-                const row = template.content.cloneNode(true);
-                row.querySelectorAll("[name], [id], label[for]").forEach((element) => {
-                    for (const attribute of ["name", "id", "for"]) {
-                        if (element.hasAttribute(attribute)) {
-                            element.setAttribute(
-                                attribute,
-                                element.getAttribute(attribute).replace(/__prefix__/g, index)
-                            );
+            if (addButton && rows && template && totalForms) {
+                addButton.addEventListener("click", () => {
+                    const index = Number(totalForms.value);
+                    const row = template.content.cloneNode(true);
+                    row.querySelectorAll("[name], [id], label[for]").forEach((element) => {
+                        for (const attribute of ["name", "id", "for"]) {
+                            if (element.hasAttribute(attribute)) {
+                                element.setAttribute(
+                                    attribute,
+                                    element.getAttribute(attribute).replace(/__prefix__/g, index)
+                                );
+                            }
                         }
+                    });
+                    row.querySelector(".row-number").textContent = index + 1;
+                    rows.appendChild(row);
+                    totalForms.value = index + 1;
+                });
+            }
+
+            if (editForm) {
+                editForm.addEventListener("submit", (event) => {
+                    if (!window.confirm("¿Estás seguro de que deseas guardar los cambios?")) {
+                        event.preventDefault();
                     }
                 });
-                row.querySelector(".row-number").textContent = index + 1;
-                rows.appendChild(row);
-                totalForms.value = index + 1;
-            });
+            }
 
-            editForm.addEventListener("submit", (event) => {
-                if (!window.confirm("¿Estás seguro de que deseas guardar los cambios?")) {
-                    event.preventDefault();
-                }
-            });
-            
+            if (categorySelect && customType && customInput) {
+                const updateCustomType = () => {
+                    const isOtherType = categorySelect.value === "otros";
+                    customType.hidden = !isOtherType;
+                    customInput.required = isOtherType;
+                    if (!isOtherType) {
+                        customInput.value = "";
+                    }
+                };
+
+                categorySelect.addEventListener("change", updateCustomType);
+                updateCustomType();
+            }
         })();

@@ -21,6 +21,7 @@
         .intro { margin: 0; color: #61758a; line-height: 1.6; }
         .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
         .page-heading .button { flex-shrink: 0; }
+        .project-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
         .layout { display: grid; grid-template-columns: minmax(260px, 350px) 1fr; gap: 24px; margin-top: 30px; align-items: start; }
         .card { background: white; border: 1px solid #e1e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 8px 24px #17324d0a; }
         .list-card { margin-top: 28px; }
@@ -118,3 +119,113 @@
             .table-actions { justify-content: stretch; flex-direction: column-reverse; }
             .table-actions button { width: 100%; }
         }
+
+.topbar {
+    background: #102a43;
+    color: white;
+    padding: 14px max(24px, calc((100vw - 1120px) / 2));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Contenedor del perfil de usuario */
+.user-menu-container {
+    position: relative;
+}
+
+.user-menu-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 30px;
+    padding: 5px 8px 5px 14px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.user-menu-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.avatar-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #54d6a0;
+    color: #102a43;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tarjeta del desplegable */
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 170px;
+    background: white;
+    border: 1px solid #e1e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    padding: 6px;
+    z-index: 1000;
+}
+
+.user-dropdown[hidden] {
+    display: none;
+}
+
+.logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: transparent;
+    color: #d32f2f;
+    border: 0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.logout-btn:hover {
+    background: #ffebee;
+}
+
+.seccion-proyecto {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: transparent;
+    color: #102a43;
+    border: 0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.proyecto {
+    font-size: 14px;
+    font-weight: 600;
+    color: #102a43;
+}

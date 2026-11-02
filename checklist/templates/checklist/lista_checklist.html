@@ -1,12 +1,26 @@
 {% extends "checklist/base.html" %}
 
 {% block content %}
+<<<<<<< Updated upstream
     <p class="eyebrow">Aseguramiento de calidad</p>
+=======
+    {% if project %}
+        <a class="back" href="{% url 'proyectos:detalle_proyecto' project.id %}">← Volver a {{ project.name }}</a>
+    {% else %}
+        <a class="back" href="{% url 'proyectos:lista_proyectos' %}">← Volver a proyectos</a>
+    {% endif %}
+>>>>>>> Stashed changes
     <div class="page-heading">
         <div>
             <h1>Checklists</h1>
         </div>
-        <a class="button" href="{% url 'checklist:crear' %}">Crear nuevo checklist</a>
+        {% if can_manage %}
+            {% if project %}
+                <a class="button" href="{% url 'checklist:proyecto_crear' project.id %}">Crear nuevo checklist</a>
+            {% else %}
+                <a class="button" href="{% url 'checklist:crear' %}">Crear nuevo checklist</a>
+            {% endif %}
+        {% endif %}
     </div>
 
     <section class="card list-card">
@@ -18,8 +32,20 @@
                         <span><strong>{{ checklist.nombre }}</strong></span>
                         <div class="checklist-actions">
                             <span class="badge">{{ checklist.tipo_display }}</span>
-                            <a class="button secondary" href="{% url 'checklist:editar' checklist.pk %}">Editar</a>
-                            <a class="button" href="{% url 'checklist:evaluar' checklist.pk %}">Iniciar checklist</a>
+                            {% if project %}
+                                <a class="button secondary" href="{% url 'checklist:proyecto_detalle' project.id checklist.pk %}">Ver tabla</a>
+                            {% else %}
+                                <a class="button secondary" href="{% url 'checklist:detalle' checklist.pk %}">Ver tabla</a>
+                            {% endif %}
+                            {% if can_manage %}
+                                {% if project %}
+                                    <a class="button secondary" href="{% url 'checklist:proyecto_editar' project.id checklist.pk %}">Editar</a>
+                                    <a class="button" href="{% url 'checklist:proyecto_evaluar' project.id checklist.pk %}">Iniciar checklist</a>
+                                {% else %}
+                                    <a class="button secondary" href="{% url 'checklist:editar' checklist.pk %}">Editar</a>
+                                    <a class="button" href="{% url 'checklist:evaluar' checklist.pk %}">Iniciar checklist</a>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}

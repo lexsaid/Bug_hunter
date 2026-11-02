@@ -1,0 +1,30 @@
+{% extends "checklist/base.html" %}
+
+{% block title %}Inicio | Bug Hunter{% endblock %}
+
+{% block content %}
+    <section class="hero">
+        <h1>Bug Hunter</h1>
+        <p>Descubre y reporta bugs en tus aplicaciones favoritas.</p>
+    </section>
+
+    <section class="features">
+        <h2>Características</h2>
+        <ul>
+            <li>Reporta bugs fácilmente</li>
+            <li>Colabora con otros usuarios</li>
+            <li>Seguimiento de problemas</li>
+        </ul>
+    </section>
+
+    <section class="seccion-proyectos">
+        <nav class="proyectos">
+            <h2>Proyectos</h2>
+            <ul>
+                <li><a href="{% url 'checklist:lista' %}">Lista de Checklists</a></li>
+                <li><a href="{% url 'defectos:lista' %}">Lista de Defectos</a></li>
+            </ul>
+        </nav>
+    </section>
+
+{% endblock %}

@@ -5,7 +5,11 @@
 {% block title %}Editar {{ checklist.nombre }} | Bug Hunter{% endblock %}
 
 {% block content %}
-    <a class="back" href="{% url 'checklist:lista' %}">← Volver a checklists</a>
+    {% if project %}
+        <a class="back" href="{% url 'checklist:proyecto_lista' project.id %}">← Volver a checklists</a>
+    {% else %}
+        <a class="back" href="{% url 'checklist:lista' %}">← Volver a checklists</a>
+    {% endif %}
     <p class="eyebrow">CU-09 · Edición de la estructura</p>
     <h1>Editar checklist</h1>
     <p class="intro">Modifica el nombre, tipo, criterios, cumplimiento y observaciones.</p>
@@ -19,7 +23,7 @@
         <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
         {{ form.categoria }}
         {% if form.categoria.errors %}<ul class="errors">{% for error in form.categoria.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
-        <div id="custom-type-container" class="custom-type-container" hidden>
+        <div id="custom-type-container" class="custom-type-container"{% if form.categoria.value != "otros" %} hidden{% endif %}>
             <label for="{{ form.tipo_personalizado.id_for_label }}">{{ form.tipo_personalizado.label }}</label>
             {{ form.tipo_personalizado }}
             {% if form.tipo_personalizado.errors %}<ul class="errors">{% for error in form.tipo_personalizado.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
@@ -87,5 +91,5 @@
         </div>
     </form>
 
-    <script src="{% static 'js/editar_checklist.js' %}"></script>
+    <script src="{% static 'js/editar_checklist.js' %}?v=2"></script>
 {% endblock %}

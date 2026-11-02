@@ -1,11 +1,21 @@
-from django.test import TestCase
+from datetime import date
 
+from django.test import TestCase
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from .models import Checklist, Criterio
+from proyectos.models import Project, ProjectMember
 
 
 class ChecklistFlowTests(TestCase):
+    def setUp(self):
+        usuario = get_user_model().objects.create_user(
+            username="qa-user",
+            password="Secure-test-password-2026",
+        )
+        self.client.force_login(usuario)
+
     def test_main_page_shows_create_button_and_empty_state_without_counter(self):
         response = self.client.get(reverse("checklist:lista"))
 
@@ -198,9 +208,9 @@ class ChecklistFlowTests(TestCase):
                 "form-0-estado": "cumple",
                 "form-0-observaciones": "Revisar enlaces internos",
                 "form-1-id": "",
-                "form-1-descripcion": "",
-                "form-1-estado": "",
-                "form-1-observaciones": "",
+                "form-1-descripcion": "Comprobar enlaces externos",
+                "form-1-estado": "no_aplica",
+                "form-1-observaciones": "No hay enlaces externos",
             },
         )
 
@@ -211,6 +221,11 @@ class ChecklistFlowTests(TestCase):
         self.assertEqual(criterio.descripcion, "Validar referencias")
         self.assertEqual(criterio.observaciones, "Revisar enlaces internos")
         self.assertEqual(criterio.estado, "cumple")
+        criterio_nuevo = Checklist.objects.get(pk=checklist.pk).criterios.get(
+            descripcion="Comprobar enlaces externos"
+        )
+        self.assertEqual(criterio_nuevo.checklist, checklist)
+        self.assertEqual(criterio_nuevo.estado, "no_aplica")
         self.assertContains(self.client.get(edit_url), "Cumplimiento")
         self.assertContains(self.client.get(edit_url), "No aplica")
 
@@ -246,6 +261,75 @@ class ChecklistFlowTests(TestCase):
         self.assertRedirects(response, reverse("checklist:lista"))
         self.assertFalse(Criterio.objects.filter(pk=criterio.pk).exists())
 
+    def test_editing_other_type_shows_custom_type_input(self):
+        checklist = Checklist.objects.create(
+            nombre="Lista personalizada",
+            categoria="otros",
+            tipo_personalizado="Accesibilidad",
+        )
+
+        response = self.client.get(
+            reverse("checklist:editar", kwargs={"pk": checklist.pk})
+        )
+
+        self.assertContains(
+            response,
+            'id="custom-type-container" class="custom-type-container"',
+        )
+        self.assertContains(response, 'value="Accesibilidad"')
+
+    def test_missing_custom_type_keeps_the_input_visible_with_validation_error(self):
+        checklist = Checklist.objects.create(
+            nombre="Lista personalizada",
+            categoria="otros",
+            tipo_personalizado="Accesibilidad",
+        )
+
+        response = self.client.post(
+            reverse("checklist:editar", kwargs={"pk": checklist.pk}),
+            {
+                "nombre": "Lista personalizada",
+                "categoria": "otros",
+                "tipo_personalizado": "",
+                "form-TOTAL_FORMS": "0",
+                "form-INITIAL_FORMS": "0",
+                "form-MIN_NUM_FORMS": "0",
+                "form-MAX_NUM_FORMS": "1000",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'id="custom-type-container" class="custom-type-container"',
+        )
+        self.assertContains(response, "Escribe el tipo de checklist.")
+
+    def test_changing_other_to_standard_category_clears_custom_type(self):
+        checklist = Checklist.objects.create(
+            nombre="Lista personalizada",
+            categoria="otros",
+            tipo_personalizado="Accesibilidad",
+        )
+
+        response = self.client.post(
+            reverse("checklist:editar", kwargs={"pk": checklist.pk}),
+            {
+                "nombre": "Lista personalizada",
+                "categoria": "codigo",
+                "tipo_personalizado": "Accesibilidad",
+                "form-TOTAL_FORMS": "0",
+                "form-INITIAL_FORMS": "0",
+                "form-MIN_NUM_FORMS": "0",
+                "form-MAX_NUM_FORMS": "1000",
+            },
+        )
+
+        checklist.refresh_from_db()
+        self.assertRedirects(response, reverse("checklist:lista"))
+        self.assertEqual(checklist.categoria, "codigo")
+        self.assertEqual(checklist.tipo_personalizado, "")
+
     def test_evaluation_updates_only_status_and_observations(self):
         checklist = Checklist.objects.create(nombre="Código", categoria="codigo")
         criterio = Criterio.objects.create(
@@ -275,3 +359,86 @@ class ChecklistFlowTests(TestCase):
         self.assertEqual(criterio.estado, "cumple")
         self.assertEqual(criterio.observaciones, "Evaluado correctamente")
         self.assertEqual(criterio.descripcion, "Revisar nombres")
+
+    def test_project_checklists_are_linked_and_isolated_from_global_list(self):
+        project = Project.objects.create(
+            name="Proyecto checklist",
+            start_date=date(2026, 10, 1),
+            end_date=date(2026, 11, 19),
+            created_by=get_user_model().objects.get(username="qa-user"),
+        )
+
+        response = self.client.post(
+            reverse(
+                "checklist:proyecto_crear",
+                kwargs={"project_id": project.pk},
+            ),
+            {"nombre": "Checklist del proyecto", "categoria": "codigo"},
+        )
+        checklist = Checklist.objects.get(nombre="Checklist del proyecto")
+
+        self.assertEqual(checklist.project, project)
+        self.assertRedirects(
+            response,
+            reverse(
+                "checklist:proyecto_detalle",
+                kwargs={"project_id": project.pk, "pk": checklist.pk},
+            ),
+        )
+        project_response = self.client.get(
+            reverse(
+                "checklist:proyecto_lista",
+                kwargs={"project_id": project.pk},
+            )
+        )
+        global_response = self.client.get(reverse("checklist:lista"))
+        self.assertContains(project_response, checklist.nombre)
+        self.assertNotContains(global_response, checklist.nombre)
+
+    def test_project_developer_can_view_but_not_modify_checklists(self):
+        user_model = get_user_model()
+        developer = user_model.objects.create_user(
+            username="checklist-developer",
+            password="Secure-test-password-2026",
+        )
+        qa = user_model.objects.get(username="qa-user")
+        project = Project.objects.create(
+            name="Proyecto compartido",
+            start_date=date(2026, 10, 1),
+            end_date=date(2026, 11, 19),
+            created_by=qa,
+        )
+        ProjectMember.objects.create(
+            project=project,
+            user=developer,
+            invited_by=qa,
+        )
+        checklist = Checklist.objects.create(
+            nombre="Solo visible",
+            categoria="codigo",
+            project=project,
+        )
+        self.client.force_login(developer)
+
+        list_url = reverse(
+            "checklist:proyecto_lista",
+            kwargs={"project_id": project.pk},
+        )
+        response = self.client.get(list_url)
+        self.assertContains(response, checklist.nombre)
+        self.assertNotContains(
+            response,
+            reverse(
+                "checklist:proyecto_editar",
+                kwargs={"project_id": project.pk, "pk": checklist.pk},
+            ),
+        )
+        self.assertEqual(
+            self.client.get(
+                reverse(
+                    "checklist:proyecto_editar",
+                    kwargs={"project_id": project.pk, "pk": checklist.pk},
+                )
+            ).status_code,
+            403,
+        )
