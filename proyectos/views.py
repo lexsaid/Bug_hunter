@@ -69,6 +69,7 @@ def project_detail(request, project_id):
         {
             "project": project,
             "user_role": "Técnico QA" if is_owner else "Desarrollador",
+            "can_view_checklist": is_owner,
             "can_invite": can_invite,
             "invite_form": invite_form,
             "members": project.memberships.select_related("user", "invited_by"),
@@ -78,17 +79,26 @@ def project_detail(request, project_id):
 
 @login_required
 def view_checklist(request, project_id):
-    get_accessible_project_or_404(request.user, project_id)
+    project = get_accessible_project_or_404(request.user, project_id)
+    if project.created_by_id != request.user.pk:
+        raise PermissionDenied("Solo el Técnico QA del proyecto puede consultar el checklist.")
     return redirect("checklist:proyecto_lista", project_id=project_id)
 
 
 def calculate_project_metrics(project):
     criteria = Criterio.objects.filter(checklist__project=project)
     total_checklist = criteria.count()
-    completed_checklist = criteria.exclude(estado="").count()
-    total_defects = project.sqa_defects.count() + ProjectDefect.objects.filter(
-        project=project
-    ).count()
+    evaluated_criteria = criteria.filter(estado__in=["cumple", "no_cumple"])
+    evaluated_checklist = evaluated_criteria.count()
+    completed_checklist = evaluated_criteria.filter(estado="cumple").count()
+    failed_checklist = evaluated_criteria.filter(estado="no_cumple").count()
+
+    sqa_defects = project.sqa_defects.all()
+    total_sqa_defects = sqa_defects.count()
+    legacy_defects = ProjectDefect.objects.filter(project=project).count()
+    total_defects = total_sqa_defects + legacy_defects
+    resolved_defects = sqa_defects.filter(estado="Resuelto").count()
+
     traceability_items = project.traceability_records.all()
     total_traceability = traceability_items.count()
 
@@ -103,40 +113,56 @@ def calculate_project_metrics(project):
         if total_traceability > 0
         else 0
     )
+    checklist_percentage = (
+        completed_checklist / evaluated_checklist * 100
+        if evaluated_checklist > 0
+        else 0
+    )
+    defects_percentage = (
+        resolved_defects / total_defects * 100
+        if total_defects > 0
+        else 100
+    )
 
-    if traceability_percentage > 95:
-        traceability_status = "Bueno"
-    elif 85 <= traceability_percentage <= 94:
-        traceability_status = "Aceptable"
-    else:
-        traceability_status = "Malo"
-
-    checklist_percentage = (completed_checklist / total_checklist * 100) if total_checklist > 0 else 0
-    if checklist_percentage >= 95:
-        checklist_status = "Bueno"
-    elif 90 <= checklist_percentage < 95:
-        checklist_status = "Aceptable"
-    else:
-        checklist_status = "Malo"
-
-    acceptable_or_better_count = sum([
-        1 for status in [traceability_status, checklist_status] if status in ["Bueno", "Aceptable"]
-    ])
-    
-    final_compliance = "Si cumple" if acceptable_or_better_count >= 2 else "No cumple"
+    traceability_status = _percentage_status(traceability_percentage)
+    checklist_status = _percentage_status(checklist_percentage)
+    defects_status = _percentage_status(defects_percentage)
+    health_average = round(
+        (traceability_percentage + checklist_percentage + defects_percentage) / 3,
+        2,
+    )
+    health_status = _percentage_status(health_average)
+    final_compliance = "Si cumple" if health_average >= 85 else "No cumple"
 
     return {
         'project': project,
         'total_checklist': total_checklist,
+        'evaluated_checklist': evaluated_checklist,
         'completed_checklist': completed_checklist,
+        'failed_checklist': failed_checklist,
         'checklist_percentage': round(checklist_percentage, 2),
         'checklist_status': checklist_status,
         'total_traceability': total_traceability,
+        'complete_traceability': complete_traceability,
         'traceability_percentage': round(traceability_percentage, 2),
         'traceability_status': traceability_status,
         'total_defects': total_defects,
+        'resolved_defects': resolved_defects,
+        'defects_percentage': round(defects_percentage, 2),
+        'defects_status': defects_status,
+        'health_average': health_average,
+        'health_status': health_status,
         'final_compliance': final_compliance,
     }
+
+
+def _percentage_status(percentage):
+    if percentage >= 95:
+        return "Bueno"
+    if percentage >= 85:
+        return "Aceptable"
+    return "Malo"
+
 
 @login_required
 def project_health_report(request, project_id):
@@ -172,12 +198,32 @@ def export_health_report_pdf(request, project_id):
     p.drawString(100, 720, f"Periodo: {project.start_date} a {project.end_date}")
     p.drawString(100, 705, f"Creado por: {project.created_by.username}")
 
-    p.drawString(100, 670, f"Trazabilidad: {metrics['traceability_percentage']}% ({metrics['traceability_status']})")
-    p.drawString(100, 650, f"Checklist Completado: {metrics['checklist_percentage']}% ({metrics['checklist_status']})")
-    p.drawString(100, 630, f"Total de Defectos: {metrics['total_defects']}")
+    p.drawString(
+        100,
+        670,
+        f"Matriz: {metrics['traceability_percentage']}% "
+        f"({metrics['complete_traceability']}/{metrics['total_traceability']} completas; "
+        f"{metrics['traceability_status']})",
+    )
+    p.drawString(
+        100,
+        650,
+        f"Checklist: {metrics['checklist_percentage']}% "
+        f"({metrics['completed_checklist']} de {metrics['evaluated_checklist']} evaluados "
+        f"cumplen; {metrics['failed_checklist']} no cumplen; {metrics['checklist_status']})",
+    )
+    p.drawString(
+        100,
+        630,
+        f"Defectos resueltos: {metrics['defects_percentage']}% "
+        f"({metrics['resolved_defects']}/{metrics['total_defects']}; "
+        f"{metrics['defects_status']})",
+    )
 
     p.setFont("Helvetica-Bold", 12)
-    p.drawString(100, 580, f"Dictamen Final: {metrics['final_compliance']}")
+    p.drawString(100, 590, f"Promedio de salud: {metrics['health_average']}%")
+    p.drawString(100, 570, f"Estado general: {metrics['health_status']}")
+    p.drawString(100, 540, f"Dictamen Final: {metrics['final_compliance']}")
 
     p.showPage()
     p.save()

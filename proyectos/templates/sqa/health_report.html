@@ -20,6 +20,7 @@
                 <div class="card-header bg-primary text-white">Nivel de Trazabilidad</div>
                 <div class="card-body">
                     <h3 class="card-title">{{ traceability_percentage }}%</h3>
+                    <p class="card-text">{{ complete_traceability }} de {{ total_traceability }} registros completos</p>
                     <p class="card-text">Calificación: <strong>{{ traceability_status }}</strong></p>
                 </div>
             </div>
@@ -29,6 +30,8 @@
                 <div class="card-header bg-info text-white">Checklist Completado</div>
                 <div class="card-body">
                     <h3 class="card-title">{{ checklist_percentage }}%</h3>
+                    <p class="card-text">{{ completed_checklist }} de {{ evaluated_checklist }} criterios evaluados cumplen; {{ failed_checklist }} no cumplen.</p>
+                    <p class="card-text">No aplica y pendientes no se incluyen en el porcentaje.</p>
                     <p class="card-text">Calificación: <strong>{{ checklist_status }}</strong></p>
                 </div>
             </div>
@@ -37,10 +40,19 @@
             <div class="card border-warning mb-3">
                 <div class="card-header bg-warning text-dark">Defectos Detectados</div>
                 <div class="card-body">
-                    <h3 class="card-title">{{ total_defects }}</h3>
-                    <p class="card-text">Registrados en total</p>
+                    <h3 class="card-title">{{ defects_percentage }}%</h3>
+                    <p class="card-text">{{ resolved_defects }} de {{ total_defects }} defectos resueltos.</p>
+                    <p class="card-text">Calificación: <strong>{{ defects_status }}</strong></p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="card text-center mb-4">
+        <div class="card-body">
+            <h3>Promedio de salud del proyecto</h3>
+            <p class="display-6">{{ health_average }}%</p>
+            <p>Promedio de matriz, checklist y defectos: <strong>{{ health_status }}</strong></p>
         </div>
     </div>
 

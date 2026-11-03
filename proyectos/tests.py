@@ -1,10 +1,158 @@
 from datetime import date
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from checklist.models import Checklist, Criterio
+from defectos.models import Defecto as SqaDefect
+from matriz_trazabilidad.models import RegistroMatriz
 from .models import ChecklistItem, Defect, Project, ProjectMember, TraceabilityMatrix
+from .views import calculate_project_metrics
+
+
+class ProjectHealthReportTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="report-user",
+            password="Secure-test-password-2026",
+        )
+        self.project = Project.objects.create(
+            name="Reporte de salud",
+            start_date=date(2026, 10, 1),
+            end_date=date(2026, 11, 19),
+            created_by=self.user,
+        )
+        self.client.force_login(self.user)
+
+    def add_health_report_data(self):
+        checklist = Checklist.objects.create(
+            nombre="Checklist reporte",
+            categoria="codigo",
+            project=self.project,
+        )
+        for state in ("cumple", "no_cumple", "no_aplica", ""):
+            Criterio.objects.create(
+                checklist=checklist,
+                descripcion=f"Criterio {state or 'pendiente'}",
+                estado=state,
+            )
+
+        complete_record = RegistroMatriz(
+            id_rn="RN-01",
+            id_cu="CU-01",
+            nombre_cu="Caso de uso",
+            id_rf="RF-01",
+            id_rnf="RNF-01",
+            id_modulo="MOD-01",
+            id_pantalla="PANT-01",
+            id_cp="CP-01",
+            evidencia="https://example.com/evidence",
+            project=self.project,
+        )
+        complete_record.save()
+        RegistroMatriz.objects.create(project=self.project, id_rn="RN-02")
+
+        defect_data = {
+            "tipo_defecto": "Funcional",
+            "proyecto_afectado": self.project.name,
+            "tecnica_sqa": "Pruebas",
+            "project": self.project,
+        }
+        SqaDefect.objects.create(
+            descripcion="Defecto resuelto",
+            severidad="Menor",
+            estado="Resuelto",
+            **defect_data,
+        )
+        SqaDefect.objects.create(
+            descripcion="Defecto abierto",
+            severidad="Menor",
+            estado="Abierto",
+            **defect_data,
+        )
+
+    def test_metrics_use_passed_over_evaluated_and_average_all_three_percentages(self):
+        self.add_health_report_data()
+
+        metrics = calculate_project_metrics(self.project)
+
+        self.assertEqual(metrics["evaluated_checklist"], 2)
+        self.assertEqual(metrics["completed_checklist"], 1)
+        self.assertEqual(metrics["failed_checklist"], 1)
+        self.assertEqual(metrics["checklist_percentage"], 50)
+        self.assertEqual(metrics["traceability_percentage"], 50)
+        self.assertEqual(metrics["defects_percentage"], 50)
+        self.assertEqual(metrics["health_average"], 50)
+        self.assertEqual(metrics["checklist_status"], "Malo")
+        self.assertEqual(metrics["final_compliance"], "No cumple")
+
+    def test_all_applicable_checklist_criteria_passing_is_100_percent_and_good(self):
+        checklist = Checklist.objects.create(
+            nombre="Checklist completo",
+            categoria="codigo",
+            project=self.project,
+        )
+        Criterio.objects.create(
+            checklist=checklist,
+            descripcion="Cumple",
+            estado="cumple",
+        )
+        Criterio.objects.create(
+            checklist=checklist,
+            descripcion="No aplica",
+            estado="no_aplica",
+        )
+        Criterio.objects.create(
+            checklist=checklist,
+            descripcion="Pendiente",
+            estado="",
+        )
+
+        metrics = calculate_project_metrics(self.project)
+
+        self.assertEqual(metrics["checklist_percentage"], 100)
+        self.assertEqual(metrics["checklist_status"], "Bueno")
+        self.assertEqual(metrics["defects_percentage"], 100)
+
+    def test_html_report_shows_component_percentages_and_average(self):
+        self.add_health_report_data()
+
+        response = self.client.get(
+            reverse(
+                "proyectos:health_report",
+                kwargs={"project_id": self.project.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "defectos resueltos")
+        self.assertContains(response, "Promedio de salud del proyecto")
+        self.assertContains(response, "50.0%")
+
+    @patch("proyectos.views.canvas.Canvas")
+    def test_pdf_uses_the_same_component_percentages_and_average(self, canvas_class):
+        self.add_health_report_data()
+
+        response = self.client.get(
+            reverse(
+                "proyectos:export_health_report_pdf",
+                kwargs={"project_id": self.project.pk},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        drawn_text = [
+            call.args[2]
+            for call in canvas_class.return_value.drawString.call_args_list
+        ]
+        self.assertTrue(any("Matriz: 50.0%" in text for text in drawn_text))
+        self.assertTrue(any("Checklist: 50.0%" in text for text in drawn_text))
+        self.assertTrue(any("Defectos resueltos: 50.0%" in text for text in drawn_text))
+        self.assertIn("Promedio de salud: 50.0%", drawn_text)
 
 
 class ProjectModelTests(TestCase):

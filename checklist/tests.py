@@ -395,7 +395,7 @@ class ChecklistFlowTests(TestCase):
         self.assertContains(project_response, checklist.nombre)
         self.assertNotContains(global_response, checklist.nombre)
 
-    def test_project_developer_can_view_but_not_modify_checklists(self):
+    def test_project_developer_cannot_view_or_modify_checklists(self):
         user_model = get_user_model()
         developer = user_model.objects.create_user(
             username="checklist-developer",
@@ -424,14 +424,15 @@ class ChecklistFlowTests(TestCase):
             "checklist:proyecto_lista",
             kwargs={"project_id": project.pk},
         )
-        response = self.client.get(list_url)
-        self.assertContains(response, checklist.nombre)
-        self.assertNotContains(
-            response,
-            reverse(
-                "checklist:proyecto_editar",
-                kwargs={"project_id": project.pk, "pk": checklist.pk},
-            ),
+        self.assertEqual(self.client.get(list_url).status_code, 403)
+        self.assertEqual(
+            self.client.get(
+                reverse(
+                    "checklist:proyecto_detalle",
+                    kwargs={"project_id": project.pk, "pk": checklist.pk},
+                )
+            ).status_code,
+            403,
         )
         self.assertEqual(
             self.client.get(
@@ -442,3 +443,33 @@ class ChecklistFlowTests(TestCase):
             ).status_code,
             403,
         )
+
+        dashboard = self.client.get(
+            reverse(
+                "proyectos:detalle_proyecto",
+                kwargs={"project_id": project.pk},
+            )
+        )
+        self.assertNotContains(dashboard, list_url)
+
+    def test_project_owner_can_view_checklist_from_project_dashboard(self):
+        project = Project.objects.create(
+            name="Proyecto QA",
+            start_date=date(2026, 10, 1),
+            end_date=date(2026, 11, 19),
+            created_by=get_user_model().objects.get(username="qa-user"),
+        )
+
+        dashboard = self.client.get(
+            reverse(
+                "proyectos:detalle_proyecto",
+                kwargs={"project_id": project.pk},
+            )
+        )
+        checklist_url = reverse(
+            "checklist:proyecto_lista",
+            kwargs={"project_id": project.pk},
+        )
+
+        self.assertContains(dashboard, checklist_url)
+        self.assertEqual(self.client.get(checklist_url).status_code, 200)

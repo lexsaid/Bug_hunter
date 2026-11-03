@@ -27,6 +27,8 @@ def lista_checklists(request, project_id=None):
         if project_id is not None
         else None
     )
+    if project is not None:
+        _require_qa(request.user, project)
     checklists = (
         project.checklists.all()
         if project is not None
@@ -81,6 +83,8 @@ def detalle_checklist(request, pk, project_id=None):
         if project_id is not None
         else None
     )
+    if project is not None:
+        _require_qa(request.user, project)
     checklist_queryset = Checklist.objects.all()
     if project is not None:
         checklist_queryset = checklist_queryset.filter(project=project)

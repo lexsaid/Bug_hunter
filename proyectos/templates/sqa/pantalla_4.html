@@ -1,14 +1,17 @@
 {% extends 'checklist/base.html' %}
 
 {% block content %}
+    <a class="back-link" href="{% url 'proyectos:lista_proyectos' %}">← Volver al panel de proyectos</a>
     <h1 class="visually-hidden">{{ project.name }} — {{ user_role }}</h1>
     
         <a class="project-dashboard-link" href="{% url 'matriz_trazabilidad:proyecto_lista' project.id %}">
             <span>Matriz Trazabilidad</span>
         </a>
-        <a class="project-dashboard-link" href="{% url 'checklist:proyecto_lista' project.id %}">
-            Checklist
-        </a>
+        {% if can_view_checklist %}
+            <a class="project-dashboard-link" href="{% url 'checklist:proyecto_lista' project.id %}">
+                Checklist
+            </a>
+        {% endif %}
         <a class="project-dashboard-link" href="{% url 'defectos:proyecto_lista' project.id %}">
             <span>Bitacora de defectos</span>
         </a>
