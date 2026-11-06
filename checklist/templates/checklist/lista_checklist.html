@@ -28,11 +28,7 @@
                         <span><strong>{{ checklist.nombre }}</strong></span>
                         <div class="checklist-actions">
                             <span class="badge">{{ checklist.tipo_display }}</span>
-                            {% if project %}
-                                <a class="button secondary" href="{% url 'checklist:proyecto_detalle' project.id checklist.pk %}">Ver tabla</a>
-                            {% else %}
-                                <a class="button secondary" href="{% url 'checklist:detalle' checklist.pk %}">Ver tabla</a>
-                            {% endif %}
+                            
                             {% if can_manage %}
                                 {% if project %}
                                     <a class="button secondary" href="{% url 'checklist:proyecto_editar' project.id checklist.pk %}">Editar</a>
